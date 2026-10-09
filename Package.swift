@@ -25,10 +25,20 @@ let package = Package(
         .plugin(name: "NorvoCodegen", targets: ["NorvoCodegen"]),
     ],
     targets: [
-        binary("CNorvoLite", "CNorvoLite.xcframework", checksum: "f38782563851a787f393618110c608d0a40f5031d2f38c8d2892a96f49a8eda8"),
-        binary("norvo", "norvo.artifactbundle", checksum: "74c497cc4a093cb8f2983688747d11bf33282c2f58ec9ed8ba0dd0e12153f6d0"),
+        binary(
+            "CNorvoLite", "CNorvoLite.xcframework",
+            checksum: "f38782563851a787f393618110c608d0a40f5031d2f38c8d2892a96f49a8eda8"),
+        binary(
+            "norvo", "norvo.artifactbundle",
+            checksum: "74c497cc4a093cb8f2983688747d11bf33282c2f58ec9ed8ba0dd0e12153f6d0"),
         .target(name: "NorvoLite", dependencies: ["CNorvoLite"]),
         .plugin(name: "NorvoCodegen", capability: .buildTool(), dependencies: ["norvo"]),
         .testTarget(name: "NorvoLiteTests", dependencies: ["NorvoLite"]),
+        .testTarget(
+            name: "CodegenTests",
+            dependencies: ["NorvoLite"],
+            exclude: ["schema.nql", "migrations", "operations"],
+            plugins: ["NorvoCodegen"]
+        ),
     ]
 )

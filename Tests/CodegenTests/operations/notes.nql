@@ -1,0 +1,7 @@
+mutation AddNote($title: String!, $status: Status, $seen: DateTime, $blob: Bytes, $embedding: Vector) {
+  createNote(input: {title: $title, status: $status, seen: $seen, blob: $blob, embedding: $embedding}) { id }
+}
+query Notes { notes(orderBy: [{title: ASC}]) { ...NoteBits seen blob embedding } }
+subscription LiveNotes { notes(orderBy: [{title: ASC}]) { ...NoteBits } }
+mutation AddApparel($sku: String!) { createApparel(input: {sku: $sku}) { id } }
+query Shelf { products(orderBy: [{sku: ASC}]) { sku ... on Apparel { size } } }

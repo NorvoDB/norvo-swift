@@ -1,0 +1,6 @@
+enum Status { OPEN DONE }
+type Tag { label: String! @unique }
+type Note { title: String! @unique  status: Status  tags: [Tag!]  seen: DateTime  blob: Bytes  embedding: Vector @vector(dims: 2, model: "m") }
+interface Product { sku: String! @unique }
+type Apparel implements Product { size: String }
+type Cosmetic implements Product { volumeMl: Int! }

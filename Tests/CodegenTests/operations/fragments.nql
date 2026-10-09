@@ -1,0 +1,1 @@
+fragment NoteBits on Note { title status tags { label } }
