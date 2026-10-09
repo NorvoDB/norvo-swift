@@ -30,5 +30,11 @@ let package = Package(
         .target(name: "NorvoLite", dependencies: ["CNorvoLite"]),
         .plugin(name: "NorvoCodegen", capability: .buildTool(), dependencies: ["norvo"]),
         .testTarget(name: "NorvoLiteTests", dependencies: ["NorvoLite"]),
+        .testTarget(
+            name: "CodegenTests",
+            dependencies: ["NorvoLite"],
+            exclude: ["schema.nql", "migrations", "operations"],
+            plugins: ["NorvoCodegen"]
+        ),
     ]
 )
