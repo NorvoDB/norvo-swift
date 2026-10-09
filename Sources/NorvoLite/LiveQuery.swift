@@ -2,7 +2,8 @@ import Foundation
 import Observation
 
 /// A subscription's result for SwiftUI: `data` follows the database after every commit that changes it.
-/// It starts when created and stops when released.
+/// It starts when created and stops when released. Create it once per screen (in `@State` or a model
+/// object), not in a view's `init`, which SwiftUI may run on every re-render.
 @MainActor @Observable
 public final class LiveQuery<S: NorvoSubscription> {
     public private(set) var data: S.Data?

@@ -20,27 +20,32 @@ private let onFree: norvo_free_fn = { ctx in
     Unmanaged<Sink>.fromOpaque(ctx).takeRetainedValue().continuation.finish()
 }
 
+/// Live queries of one database not yet freed.
+final class FeedCount: @unchecked Sendable {
+    private let lock = NSLock()
+    private var n = 0
+    func add(_ d: Int) {
+        lock.lock()
+        n += d
+        lock.unlock()
+    }
+    var value: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return n
+    }
+}
+
 /// One live query in Lite: frees it once, on `free()` or when dropped.
 final class Feed: @unchecked Sendable {
     private let lock = NSLock()
     private var sub: OpaquePointer?
     private let database: Database
 
-    private static let counter = NSLock()
-    nonisolated(unsafe) private static var open = 0
-    /// Feeds not yet freed, for tests.
-    static var live: Int {
-        counter.lock()
-        defer { counter.unlock() }
-        return open
-    }
-
     init(_ sub: OpaquePointer, database: Database) {
         self.sub = sub
         self.database = database
-        Feed.counter.lock()
-        Feed.open += 1
-        Feed.counter.unlock()
+        database.feeds.add(1)
     }
 
     /// The next event is the full result.
@@ -57,9 +62,7 @@ final class Feed: @unchecked Sendable {
         lock.unlock()
         guard let s else { return }
         norvo_sub_free(s)
-        Feed.counter.lock()
-        Feed.open -= 1
-        Feed.counter.unlock()
+        database.feeds.add(-1)
     }
 
     deinit { free() }
@@ -77,10 +80,14 @@ extension Database {
     func openFeed<S: NorvoSubscription>(_ s: S, _ sink: Sink) throws -> Feed {
         let stmt = try statements.statement(S.self)
         let vars: Data = S.Variables.self == NoVariables.self ? Data() : try CBOREncoder().encode(s.variables).encoded()
+        return try handle.use { _ in try startFeed(stmt, vars, S.operationName, sink) }
+    }
+
+    private func startFeed(_ stmt: OpaquePointer, _ vars: Data, _ operation: String, _ sink: Sink) throws -> Feed {
         let ctx = Unmanaged.passRetained(sink).toOpaque()
         var sub: OpaquePointer?
         var err: OpaquePointer?
-        let status = S.operationName.withCString { name in
+        let status = operation.withCString { name in
             vars.withUnsafeBytes { v in
                 norvo_subscribe(
                     stmt, name, v.bindMemory(to: UInt8.self).baseAddress, vars.count, onEvent, ctx, onFree, &sub, &err)
@@ -136,7 +143,10 @@ extension Database {
             let task = Task {
                 do {
                     for try await u in updates {
-                        if case .null = u.data { continue }
+                        // A null reached `data`: nothing to yield, and the errors say why.
+                        if case .null = u.data {
+                            throw ResponseError<S.Data>(errors: u.errors, partial: nil)
+                        }
                         cont.yield(try CBORDecoder().decode(S.Data.self, from: u.data))
                     }
                     cont.finish()

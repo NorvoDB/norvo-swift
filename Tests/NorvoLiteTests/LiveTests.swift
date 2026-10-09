@@ -60,7 +60,8 @@ struct LiveTags: NorvoSubscription {
     for i in 0..<20 {
         _ = try await db.mutate(AddTag(variables: .init(label: "c\(i)", rank: i)), as: me)
     }
-    #expect(Feed.live == 0, "every feed freed")
+    for _ in 0..<500 where db.openFeeds > 0 { try await Task.sleep(for: .milliseconds(10)) }
+    #expect(db.openFeeds == 0, "every feed of this database freed")
 }
 
 @MainActor @Test func liveQueryTracksTheDatabase() async throws {
