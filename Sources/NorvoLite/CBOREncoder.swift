@@ -51,7 +51,8 @@ final class _CBOREncoder: Encoder {
             let msDouble = (date.timeIntervalSince1970 * 1000).rounded()
             // Int64 milliseconds cover ±292 million years; anything else (and NaN) is refused, not trapped on.
             guard msDouble.isFinite, msDouble >= -9.2e18, msDouble <= 9.2e18 else {
-                throw EncodingError.invalidValue(date, .init(codingPath: path, debugDescription: "the date is out of range"))
+                throw EncodingError.invalidValue(
+                    date, .init(codingPath: path, debugDescription: "the date is out of range"))
             }
             let ms = Int64(msDouble)
             let (secs, rest) = (ms.floorDiv(1000), ms.floorMod(1000))
@@ -110,7 +111,8 @@ final class _CBOREncoder: Encoder {
             put(key, n)
         }
 
-        mutating func nestedContainer<N: CodingKey>(keyedBy type: N.Type, forKey key: Key) -> KeyedEncodingContainer<N> {
+        mutating func nestedContainer<N: CodingKey>(keyedBy type: N.Type, forKey key: Key) -> KeyedEncodingContainer<N>
+        {
             let n = Node()
             put(key, n)
             return _CBOREncoder(n, path: codingPath + [key]).container(keyedBy: type)

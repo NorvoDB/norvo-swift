@@ -1,0 +1,24 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  # Formatting fails here, on Linux minutes, before the macOS job starts.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift format lint --strict -r Sources Tests Plugins Package.swift
+  test:
+    # The package wraps an XCFramework: macOS is its only host.
+    needs: lint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+      - run: xcodebuild -scheme NorvoLite -destination 'generic/platform=iOS Simulator' build

@@ -44,18 +44,38 @@ extension CBOR: Hashable {
 
     public func hash(into h: inout Hasher) {
         switch self {
-        case .unsigned(let x): h.combine(0); h.combine(x)
-        case .negative(let x): h.combine(1); h.combine(x)
-        case .bytes(let x): h.combine(2); h.combine(x)
-        case .text(let x): h.combine(3); h.combine(x)
-        case .array(let x): h.combine(4); h.combine(x)
+        case .unsigned(let x):
+            h.combine(0)
+            h.combine(x)
+        case .negative(let x):
+            h.combine(1)
+            h.combine(x)
+        case .bytes(let x):
+            h.combine(2)
+            h.combine(x)
+        case .text(let x):
+            h.combine(3)
+            h.combine(x)
+        case .array(let x):
+            h.combine(4)
+            h.combine(x)
         case .map(let x):
             h.combine(5)
-            for (k, v) in x { h.combine(k); h.combine(v) }
-        case .tag(let t, let x): h.combine(6); h.combine(t); h.combine(x)
-        case .bool(let x): h.combine(7); h.combine(x)
+            for (k, v) in x {
+                h.combine(k)
+                h.combine(v)
+            }
+        case .tag(let t, let x):
+            h.combine(6)
+            h.combine(t)
+            h.combine(x)
+        case .bool(let x):
+            h.combine(7)
+            h.combine(x)
         case .null: h.combine(8)
-        case .double(let x): h.combine(9); h.combine(x.bitPattern)
+        case .double(let x):
+            h.combine(9)
+            h.combine(x.bitPattern)
         }
     }
 }
@@ -79,10 +99,18 @@ extension CBOR {
         let m = major << 5
         switch n {
         case 0..<24: out.append(m | UInt8(n))
-        case 24...0xff: out.append(m | 24); out.append(UInt8(n))
-        case 0x100...0xffff: out.append(m | 25); out.append(contentsOf: withUnsafeBytes(of: UInt16(n).bigEndian, Array.init))
-        case 0x10000...0xffff_ffff: out.append(m | 26); out.append(contentsOf: withUnsafeBytes(of: UInt32(n).bigEndian, Array.init))
-        default: out.append(m | 27); out.append(contentsOf: withUnsafeBytes(of: n.bigEndian, Array.init))
+        case 24...0xff:
+            out.append(m | 24)
+            out.append(UInt8(n))
+        case 0x100...0xffff:
+            out.append(m | 25)
+            out.append(contentsOf: withUnsafeBytes(of: UInt16(n).bigEndian, Array.init))
+        case 0x10000...0xffff_ffff:
+            out.append(m | 26)
+            out.append(contentsOf: withUnsafeBytes(of: UInt32(n).bigEndian, Array.init))
+        default:
+            out.append(m | 27)
+            out.append(contentsOf: withUnsafeBytes(of: n.bigEndian, Array.init))
         }
     }
 
@@ -90,7 +118,9 @@ extension CBOR {
         switch self {
         case .unsigned(let n): CBOR.head(0, n, into: &out)
         case .negative(let n): CBOR.head(1, n, into: &out)
-        case .bytes(let b): CBOR.head(2, UInt64(b.count), into: &out); out.append(b)
+        case .bytes(let b):
+            CBOR.head(2, UInt64(b.count), into: &out)
+            out.append(b)
         case .text(let s):
             let u = Data(s.utf8)
             CBOR.head(3, UInt64(u.count), into: &out)
@@ -100,8 +130,13 @@ extension CBOR {
             for i in items { i.write(into: &out) }
         case .map(let pairs):
             CBOR.head(5, UInt64(pairs.count), into: &out)
-            for (k, v) in pairs { k.write(into: &out); v.write(into: &out) }
-        case .tag(let t, let v): CBOR.head(6, t, into: &out); v.write(into: &out)
+            for (k, v) in pairs {
+                k.write(into: &out)
+                v.write(into: &out)
+            }
+        case .tag(let t, let v):
+            CBOR.head(6, t, into: &out)
+            v.write(into: &out)
         case .bool(let b): out.append(b ? 0xf5 : 0xf4)
         case .null: out.append(0xf6)
         case .double(let x):
@@ -129,7 +164,8 @@ extension CBOR {
     /// A half-precision float (Float16 is unavailable on Intel Macs).
     static func half(_ h: UInt16) -> Double {
         let sign: Double = h & 0x8000 == 0 ? 1 : -1
-        let exp = Int((h >> 10) & 0x1f), frac = Double(h & 0x3ff)
+        let exp = Int((h >> 10) & 0x1f)
+        let frac = Double(h & 0x3ff)
         switch exp {
         case 0: return sign * frac * pow(2, -24)
         case 31: return frac == 0 ? sign * .infinity : .nan
@@ -168,7 +204,8 @@ extension CBOR {
         mutating func value(depth: Int) throws -> CBOR {
             guard depth < CBOR.maxDepth else { throw CBORError.malformed("nesting is deeper than \(CBOR.maxDepth)") }
             let first = try byte()
-            let major = first >> 5, ai = first & 0x1f
+            let major = first >> 5
+            let ai = first & 0x1f
             switch major {
             case 0: return .unsigned(try uint(ai))
             case 1: return .negative(try uint(ai))
@@ -180,7 +217,9 @@ extension CBOR {
                 return .text(s)
             case 4:
                 let n = try uint(ai)
-                guard n <= UInt64(bytes.count - at) else { throw CBORError.malformed("an array claims more items than the input holds") }
+                guard n <= UInt64(bytes.count - at) else {
+                    throw CBORError.malformed("an array claims more items than the input holds")
+                }
                 var items: [CBOR] = []
                 // A claimed length reserves at most a small block up front; the list grows as items decode, so
                 // input cannot make the decoder allocate more than it holds.
@@ -189,7 +228,9 @@ extension CBOR {
                 return .array(items)
             case 5:
                 let n = try uint(ai)
-                guard n <= UInt64(bytes.count - at) / 2 else { throw CBORError.malformed("a map claims more pairs than the input holds") }
+                guard n <= UInt64(bytes.count - at) / 2 else {
+                    throw CBORError.malformed("a map claims more pairs than the input holds")
+                }
                 var pairs: [(CBOR, CBOR)] = []
                 pairs.reserveCapacity(Int(min(n, 1024)))
                 for _ in 0..<n { pairs.append((try value(depth: depth + 1), try value(depth: depth + 1))) }

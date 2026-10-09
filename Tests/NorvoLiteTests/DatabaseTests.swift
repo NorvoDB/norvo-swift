@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import NorvoLite
 
 let tagSDL = "type Tag { label: String! @unique  rank: Int }\n"
@@ -11,16 +12,26 @@ struct Tags: NorvoQuery {
     var variables: NoVariables { NoVariables() }
     struct Data: Decodable, Sendable, Equatable {
         let tags: [T]
-        struct T: Decodable, Sendable, Equatable { let label: String; let rank: Int? }
+        struct T: Decodable, Sendable, Equatable {
+            let label: String
+            let rank: Int?
+        }
     }
 }
 
 struct AddTag: NorvoMutation {
     static let operationName = "AddTag"
-    static let document = "mutation AddTag($label: String!, $rank: Int) { createTag(input: {label: $label, rank: $rank}) { label } }"
-    struct Variables: Encodable, Sendable { let label: String; let rank: Int? }
+    static let document =
+        "mutation AddTag($label: String!, $rank: Int) { createTag(input: {label: $label, rank: $rank}) { label } }"
+    struct Variables: Encodable, Sendable {
+        let label: String
+        let rank: Int?
+    }
     let variables: Variables
-    struct Data: Decodable, Sendable { let createTag: L; struct L: Decodable, Sendable { let label: String } }
+    struct Data: Decodable, Sendable {
+        let createTag: L
+        struct L: Decodable, Sendable { let label: String }
+    }
 }
 
 let me = Actor(kind: .user, name: "tester", canPurge: false)

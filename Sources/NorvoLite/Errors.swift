@@ -5,23 +5,25 @@ import Foundation
 /// about it, and a suggested fix.
 public struct NorvoError: Error, Sendable, Equatable, CustomStringConvertible {
     public enum Code: Int32, Sendable {
-        case syntax = 2, invalid, constraint, notFound, migration, tooCostly, locked, io, corrupt, fatal, `internal`,
-             pending, busy, aborted
+        case syntax = 2
+        case invalid, constraint, notFound, migration, tooCostly, locked, io, corrupt, fatal, `internal`,
+            pending, busy, aborted
 
         /// The code of a response error's `extensions.code`.
         init(responseCode: String?) {
-            self = switch responseCode {
-            case "INVALID": .invalid
-            case "CONSTRAINT": .constraint
-            case "NOT_FOUND": .notFound
-            case "TOO_COSTLY": .tooCostly
-            case "PENDING": .pending
-            case "MIGRATION": .migration
-            case "CORRUPT": .corrupt
-            case "IO": .io
-            case "FATAL": .fatal
-            default: .internal
-            }
+            self =
+                switch responseCode {
+                case "INVALID": .invalid
+                case "CONSTRAINT": .constraint
+                case "NOT_FOUND": .notFound
+                case "TOO_COSTLY": .tooCostly
+                case "PENDING": .pending
+                case "MIGRATION": .migration
+                case "CORRUPT": .corrupt
+                case "IO": .io
+                case "FATAL": .fatal
+                default: .internal
+                }
         }
     }
 

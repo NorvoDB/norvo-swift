@@ -19,7 +19,7 @@ struct NorvoCodegen: BuildToolPlugin {
                 arguments: ["codegen", "swift", dir.path, "--out", output.path],
                 inputFiles: inputs,
                 outputFiles: [output]
-            ),
+            )
         ]
     }
 }

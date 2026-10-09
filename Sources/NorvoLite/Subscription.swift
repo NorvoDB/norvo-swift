@@ -82,7 +82,8 @@ extension Database {
         var err: OpaquePointer?
         let status = S.operationName.withCString { name in
             vars.withUnsafeBytes { v in
-                norvo_subscribe(stmt, name, v.bindMemory(to: UInt8.self).baseAddress, vars.count, onEvent, ctx, onFree, &sub, &err)
+                norvo_subscribe(
+                    stmt, name, v.bindMemory(to: UInt8.self).baseAddress, vars.count, onEvent, ctx, onFree, &sub, &err)
             }
         }
         guard status == 0, let sub else {

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import NorvoLite
 
 struct Row: Codable, Equatable {
@@ -44,9 +45,9 @@ struct Row: Codable, Equatable {
 }
 
 @Test func hostileInputThrows() {
-    #expect(throws: (any Error).self) { try CBOR.decode(Data([0x9f])) }            // indefinite length
+    #expect(throws: (any Error).self) { try CBOR.decode(Data([0x9f])) }  // indefinite length
     #expect(throws: (any Error).self) { try CBOR.decode(Data([0x5b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])) }
-    #expect(throws: (any Error).self) { try CBOR.decode(Data(repeating: 0x81, count: 10_000)) } // too deep
+    #expect(throws: (any Error).self) { try CBOR.decode(Data(repeating: 0x81, count: 10_000)) }  // too deep
 }
 
 @Test func hostileLengthsAndDatesDoNotTrap() throws {

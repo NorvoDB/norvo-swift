@@ -99,7 +99,8 @@ public final class Database: Sendable {
         opts.in_memory = path == nil
         opts.max_examined = options.maxExamined ?? 0
         if let t = options.busyTimeout {
-            opts.busy_timeout_ms = UInt64(t.components.seconds) * 1000 + UInt64(t.components.attoseconds / 1_000_000_000_000_000)
+            opts.busy_timeout_ms =
+                UInt64(t.components.seconds) * 1000 + UInt64(t.components.attoseconds / 1_000_000_000_000_000)
         }
         var db: OpaquePointer?
         var err: OpaquePointer?
@@ -142,7 +143,8 @@ public final class Database: Sendable {
     /// failed and `ResponseError` for a response with errors.
     func execute<O: NorvoOperation>(_ op: O, actor: Actor?, txn: OpaquePointer?) throws -> O.Data {
         let stmt = try statements.statement(O.self)
-        let vars: Data = O.Variables.self == NoVariables.self ? Data() : try CBOREncoder().encode(op.variables).encoded()
+        let vars: Data =
+            O.Variables.self == NoVariables.self ? Data() : try CBOREncoder().encode(op.variables).encoded()
         var out = norvo_buf()
         var err: OpaquePointer?
         let status: Int32 = O.operationName.withCString { name in
@@ -179,11 +181,13 @@ public final class Database: Sendable {
     /// Applies the pending migrations of `migrations`, the list the app ships, in order. A dry run runs the
     /// first pending one and rolls it back.
     public func migrate(_ migrations: [Migration], dryRun: Bool = false) async throws -> MigrationReport {
-        let list = CBOR.array(migrations.map { m in
-            var pairs: [(CBOR, CBOR)] = [(.text("name"), .text(m.name)), (.text("sdl"), .text(m.sdl))]
-            if let d = m.data { pairs.append((.text("data"), .text(d))) }
-            return .map(pairs)
-        }).encoded()
+        let list = CBOR.array(
+            migrations.map { m in
+                var pairs: [(CBOR, CBOR)] = [(.text("name"), .text(m.name)), (.text("sdl"), .text(m.sdl))]
+                if let d = m.data { pairs.append((.text("data"), .text(d))) }
+                return .map(pairs)
+            }
+        ).encoded()
         return try await Database.run {
             try self.call(list) { bytes, len, out, err in norvo_migrate(self.handle.db, bytes, len, dryRun, out, err) }
         }
@@ -205,7 +209,8 @@ public final class Database: Sendable {
     /// Calls a Lite entry point that takes CBOR and returns CBOR, decoding the result.
     func call<T: Decodable>(
         _ input: Data,
-        _ body: (UnsafePointer<UInt8>?, Int, UnsafeMutablePointer<norvo_buf>, UnsafeMutablePointer<OpaquePointer?>) -> Int32
+        _ body: (UnsafePointer<UInt8>?, Int, UnsafeMutablePointer<norvo_buf>, UnsafeMutablePointer<OpaquePointer?>) ->
+            Int32
     ) throws -> T {
         var out = norvo_buf()
         var err: OpaquePointer?

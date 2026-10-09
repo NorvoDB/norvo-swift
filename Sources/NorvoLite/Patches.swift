@@ -40,7 +40,8 @@ enum Patches {
     }
 
     /// Runs `change` on the value at `path` inside `tree`.
-    private static func at(_ path: ArraySlice<CBOR>, in tree: inout CBOR, _ change: (inout CBOR) throws -> Void) throws {
+    private static func at(_ path: ArraySlice<CBOR>, in tree: inout CBOR, _ change: (inout CBOR) throws -> Void) throws
+    {
         guard let first = path.first else {
             try change(&tree)
             return
@@ -86,10 +87,11 @@ struct ClientTree {
         let errors = (ev["errors"]).flatMap { try? CBORDecoder().decode([GraphQLError].self, from: $0) } ?? []
         if let ended = ev["ended"] {
             let first = (try? CBORDecoder().decode([GraphQLError].self, from: ended))?.first
-            return .ended(NorvoError(
-                code: NorvoError.Code(responseCode: first?.code),
-                message: first?.message ?? "the live query ended"
-            ))
+            return .ended(
+                NorvoError(
+                    code: NorvoError.Code(responseCode: first?.code),
+                    message: first?.message ?? "the live query ended"
+                ))
         }
         if case .unsigned(let s)? = ev["seq"] {
             data = ev["data"] ?? .null
@@ -99,7 +101,7 @@ struct ClientTree {
         }
         guard !awaitingFull else { return .skip }
         guard case .unsigned(let from)? = ev["from"], case .unsigned(let to)? = ev["to"], let patches = ev["patches"],
-              from == seq, var tree = data
+            from == seq, var tree = data
         else {
             awaitingFull = true
             resync()

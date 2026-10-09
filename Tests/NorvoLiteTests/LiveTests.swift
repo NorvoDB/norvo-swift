@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import NorvoLite
 
 struct LiveTags: NorvoSubscription {
@@ -13,15 +14,27 @@ struct LiveTags: NorvoSubscription {
 @Test func patchesApplyInOrderToNestedLists() throws {
     var tree = CBOR.map([(.text("a"), .array([.map([(.text("l"), .array([.unsigned(1), .unsigned(2)]))])]))])
     let patches: CBOR = .array([
-        .map([(.text("op"), .text("insert")), (.text("path"), .array([.text("a"), .unsigned(0), .text("l"), .unsigned(2)])), (.text("value"), .unsigned(3))]),
-        .map([(.text("op"), .text("move")), (.text("path"), .array([.text("a"), .unsigned(0), .text("l"), .unsigned(2)])), (.text("to"), .unsigned(0))]),
-        .map([(.text("op"), .text("remove")), (.text("path"), .array([.text("a"), .unsigned(0), .text("l"), .unsigned(1)]))]),
+        .map([
+            (.text("op"), .text("insert")),
+            (.text("path"), .array([.text("a"), .unsigned(0), .text("l"), .unsigned(2)])),
+            (.text("value"), .unsigned(3)),
+        ]),
+        .map([
+            (.text("op"), .text("move")),
+            (.text("path"), .array([.text("a"), .unsigned(0), .text("l"), .unsigned(2)])), (.text("to"), .unsigned(0)),
+        ]),
+        .map([
+            (.text("op"), .text("remove")),
+            (.text("path"), .array([.text("a"), .unsigned(0), .text("l"), .unsigned(1)])),
+        ]),
     ])
     try Patches.apply(patches, to: &tree)
     #expect(tree == .map([(.text("a"), .array([.map([(.text("l"), .array([.unsigned(3), .unsigned(2)]))])]))]))
     var bad = tree
     #expect(throws: (any Error).self) {
-        try Patches.apply(.array([.map([(.text("op"), .text("remove")), (.text("path"), .array([.text("a"), .unsigned(9)]))])]), to: &bad)
+        try Patches.apply(
+            .array([.map([(.text("op"), .text("remove")), (.text("path"), .array([.text("a"), .unsigned(9)]))])]),
+            to: &bad)
     }
 }
 

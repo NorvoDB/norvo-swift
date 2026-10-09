@@ -34,7 +34,8 @@ final class _CBORDecoder: Decoder {
         if type == Date.self {
             switch value {
             case .tag(1001, .map(let pairs)):
-                var secs = 0.0, ms = 0.0
+                var secs = 0.0
+                var ms = 0.0
                 for (k, v) in pairs {
                     let n = try unbox(Double.self, v, path: path)
                     switch k {
@@ -56,7 +57,10 @@ final class _CBORDecoder: Decoder {
         if type == [Float].self, case .tag(85, .bytes(let b)) = value {
             guard b.count % 4 == 0 else { throw mismatch(type, value, path) }
             let floats = stride(from: 0, to: b.count, by: 4).map { i in
-                Float(bitPattern: b.withUnsafeBytes { UInt32(littleEndian: $0.loadUnaligned(fromByteOffset: i, as: UInt32.self)) })
+                Float(
+                    bitPattern: b.withUnsafeBytes {
+                        UInt32(littleEndian: $0.loadUnaligned(fromByteOffset: i, as: UInt32.self))
+                    })
             }
             return floats as! T
         }
@@ -93,7 +97,8 @@ final class _CBORDecoder: Decoder {
 
         func field(_ key: Key) throws -> CBOR {
             guard let v = fields[key.stringValue] else {
-                throw DecodingError.keyNotFound(key, .init(codingPath: codingPath, debugDescription: "no `\(key.stringValue)`"))
+                throw DecodingError.keyNotFound(
+                    key, .init(codingPath: codingPath, debugDescription: "no `\(key.stringValue)`"))
             }
             return v
         }
@@ -115,8 +120,12 @@ final class _CBORDecoder: Decoder {
             try _CBORDecoder(try field(key), path: codingPath + [key]).unkeyedContainer()
         }
 
-        func superDecoder() throws -> any Decoder { _CBORDecoder(.map(fields.map { (.text($0.key), $0.value) }), path: codingPath) }
-        func superDecoder(forKey key: Key) throws -> any Decoder { _CBORDecoder(try field(key), path: codingPath + [key]) }
+        func superDecoder() throws -> any Decoder {
+            _CBORDecoder(.map(fields.map { (.text($0.key), $0.value) }), path: codingPath)
+        }
+        func superDecoder(forKey key: Key) throws -> any Decoder {
+            _CBORDecoder(try field(key), path: codingPath + [key])
+        }
     }
 
     struct Index: CodingKey {
@@ -136,7 +145,8 @@ final class _CBORDecoder: Decoder {
 
         mutating func next() throws -> (CBOR, [any CodingKey]) {
             guard !isAtEnd else {
-                throw DecodingError.valueNotFound(CBOR.self, .init(codingPath: codingPath, debugDescription: "the list has ended"))
+                throw DecodingError.valueNotFound(
+                    CBOR.self, .init(codingPath: codingPath, debugDescription: "the list has ended"))
             }
             defer { currentIndex += 1 }
             return (items[currentIndex], codingPath + [Index(currentIndex)])
