@@ -2,9 +2,9 @@
 import Foundation
 import PackageDescription
 
-/// The `database` release the binaries come from. `NORVO_LOCAL=1` uses `Artifacts/`, which
+/// The binaries release of this repository: `database` publishes its build of the engine under this tag. `NORVO_LOCAL=1` uses `Artifacts/`, which
 /// `scripts/use-local.sh` links to a local `database` build.
-let release = "v0.0.1"
+let release = "binaries-v0.0.1"
 let local = ProcessInfo.processInfo.environment["NORVO_LOCAL"] == "1"
 
 func binary(_ name: String, _ file: String, checksum: String) -> Target {
@@ -12,7 +12,7 @@ func binary(_ name: String, _ file: String, checksum: String) -> Target {
         ? .binaryTarget(name: name, path: "Artifacts/\(file)")
         : .binaryTarget(
             name: name,
-            url: "https://github.com/NorvoDB/database/releases/download/\(release)/\(file).zip",
+            url: "https://github.com/NorvoDB/norvo-swift/releases/download/\(release)/\(file).zip",
             checksum: checksum
         )
 }
