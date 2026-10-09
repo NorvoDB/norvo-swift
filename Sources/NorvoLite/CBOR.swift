@@ -182,14 +182,16 @@ extension CBOR {
                 let n = try uint(ai)
                 guard n <= UInt64(bytes.count - at) else { throw CBORError.malformed("an array claims more items than the input holds") }
                 var items: [CBOR] = []
-                items.reserveCapacity(Int(n))
+                // A claimed length reserves at most a small block up front; the list grows as items decode, so
+                // input cannot make the decoder allocate more than it holds.
+                items.reserveCapacity(Int(min(n, 1024)))
                 for _ in 0..<n { items.append(try value(depth: depth + 1)) }
                 return .array(items)
             case 5:
                 let n = try uint(ai)
                 guard n <= UInt64(bytes.count - at) / 2 else { throw CBORError.malformed("a map claims more pairs than the input holds") }
                 var pairs: [(CBOR, CBOR)] = []
-                pairs.reserveCapacity(Int(n))
+                pairs.reserveCapacity(Int(min(n, 1024)))
                 for _ in 0..<n { pairs.append((try value(depth: depth + 1), try value(depth: depth + 1))) }
                 return .map(pairs)
             case 6: return .tag(try uint(ai), try value(depth: depth + 1))

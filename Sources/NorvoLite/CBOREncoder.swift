@@ -48,7 +48,12 @@ final class _CBOREncoder: Encoder {
         case let id as UUID:
             return .tag(37, .bytes(withUnsafeBytes(of: id.uuid) { Data($0) }))
         case let date as Date:
-            let ms = Int64((date.timeIntervalSince1970 * 1000).rounded())
+            let msDouble = (date.timeIntervalSince1970 * 1000).rounded()
+            // Int64 milliseconds cover ±292 million years; anything else (and NaN) is refused, not trapped on.
+            guard msDouble.isFinite, msDouble >= -9.2e18, msDouble <= 9.2e18 else {
+                throw EncodingError.invalidValue(date, .init(codingPath: path, debugDescription: "the date is out of range"))
+            }
+            let ms = Int64(msDouble)
             let (secs, rest) = (ms.floorDiv(1000), ms.floorMod(1000))
             var pairs: [(CBOR, CBOR)] = [(.unsigned(1), CBOR(Int(secs)))]
             if rest != 0 { pairs.append((.negative(2), .unsigned(UInt64(rest)))) }

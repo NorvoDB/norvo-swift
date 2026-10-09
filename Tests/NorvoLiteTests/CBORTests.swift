@@ -48,3 +48,12 @@ struct Row: Codable, Equatable {
     #expect(throws: (any Error).self) { try CBOR.decode(Data([0x5b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff])) }
     #expect(throws: (any Error).self) { try CBOR.decode(Data(repeating: 0x81, count: 10_000)) } // too deep
 }
+
+@Test func hostileLengthsAndDatesDoNotTrap() throws {
+    // An array claiming 2^32 items in a 9-byte input, nested: refused, without a large reservation.
+    var deep = Data()
+    for _ in 0..<100 { deep.append(contentsOf: [0x9a, 0xff, 0xff, 0xff, 0xff]) }
+    #expect(throws: (any Error).self) { try CBOR.decode(deep) }
+    #expect(throws: (any Error).self) { try CBOREncoder().encode(Date(timeIntervalSince1970: .infinity)) }
+    #expect(throws: (any Error).self) { try CBOREncoder().encode(Date(timeIntervalSince1970: 1e300)) }
+}
