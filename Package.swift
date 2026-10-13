@@ -4,7 +4,7 @@ import PackageDescription
 
 /// The binaries release of this repository: `database` publishes its build of the engine under this tag. `NORVO_LOCAL=1` uses `Artifacts/`, which
 /// `scripts/use-local.sh` links to a local `database` build.
-let release = "binaries-v0.0.1"
+let release = "binaries-v0.0.2"
 let local = ProcessInfo.processInfo.environment["NORVO_LOCAL"] == "1"
 
 func binary(_ name: String, _ file: String, checksum: String) -> Target {
@@ -27,10 +27,10 @@ let package = Package(
     targets: [
         binary(
             "CNorvoLite", "CNorvoLite.xcframework",
-            checksum: "f38782563851a787f393618110c608d0a40f5031d2f38c8d2892a96f49a8eda8"),
+            checksum: "b7381dd31ea4dc22b59521c5962bbadce0650dbb8505a80d71e14d906db4a5f1"),
         binary(
             "norvo", "norvo.artifactbundle",
-            checksum: "74c497cc4a093cb8f2983688747d11bf33282c2f58ec9ed8ba0dd0e12153f6d0"),
+            checksum: "e330e64e3aa811104b5cb1161e4f040681203a87f0facc05fbedf9acb9b4948c"),
         .target(name: "NorvoLite", dependencies: ["CNorvoLite"]),
         .plugin(name: "NorvoCodegen", capability: .buildTool(), dependencies: ["norvo"]),
         .testTarget(name: "NorvoLiteTests", dependencies: ["NorvoLite"]),
